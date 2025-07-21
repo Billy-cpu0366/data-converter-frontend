@@ -40,7 +40,8 @@ function App() {
         formData.append('file', file);
 
         try {
-            const response = await axios.post('http://localhost:8000/convert', formData, {
+            const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+            const response = await axios.post(`${API_BASE_URL}/convert`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -96,19 +97,14 @@ function App() {
         setGeneratingQuiz(true);
         setError(null);
         
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
         const payload = {
             quiz_data: editableQuizData,
             mode: quizMode,
         };
 
         try {
-            const BACKEND_URL = process.env.REACT_APP_BACKEND_URL; // 再次获取环境变量，或者你可以在函数外部定义一次
-        if (!BACKEND_URL) {
-            setError('Backend URL is not configured. Please check environment variables.');
-            setGeneratingQuiz(false); // 注意这里是 setGeneratingQuiz
-            return;
-        }
-        const response = await axios.post(`${BACKEND_URL}/generate-practice-page`, payload, {
+            const response = await axios.post(`${API_BASE_URL}/generate-practice-page`, payload, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
