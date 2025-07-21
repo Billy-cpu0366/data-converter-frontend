@@ -1,27 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+// Define the structure of a single quiz question
+interface QuizQuestion {
+    question: string;
+    options: string[];
+    answer: string; // The text of the correct answer
+    correctOptionIndex?: number; // The index (0-3) of the correct option
+}
+
 function App() {
     const [file, setFile] = useState<File | null>(null);
-    const [convertedData, setConvertedData] = useState<any>(null);
-    const [editableQuizData, setEditableQuizData] = useState<any[]>([]); // New state for editable data
+    const [editableQuizData, setEditableQuizData] = useState<QuizQuestion[]>([]);
     const [loading, setLoading] = useState(false);
-    const [generatingQuiz, setGeneratingQuiz] = useState(false); // New state for quiz generation
+    const [generatingQuiz, setGeneratingQuiz] = useState(false);
+    const [quizMode, setQuizMode] = useState<'random' | 'sequential'>('random');
+    const [error, setError] = useState<string | null>(null); // For displaying user-friendly errors
+    const [originalFilename, setOriginalFilename] = useState<string>("");
+
+    
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
             setFile(event.target.files[0]);
+            setError(null); // Clear previous errors
         }
     };
 
     const handleConvert = async () => {
         if (!file) {
-            alert('Please select a file first.');
+            setError('Please select a file first.');
             return;
         }
 
         setLoading(true);
+        setError(null);
         const formData = new FormData();
         formData.append('file', file);
 
@@ -31,205 +45,213 @@ function App() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            setConvertedData(response.data);
-            // Initialize editableQuizData with the converted data for micro-tuning
-            if (response.data && response.data.converted_data) {
-                setEditableQuizData(response.data.converted_data);
-            }
-        } catch (error) {
-            console.error('Error converting data:', error);
-            alert('Failed to convert data. Please check the console for more details.');
+            
+            setEditableQuizData(response.data.converted_data || []);
+            setOriginalFilename(response.data.original_filename || "");
+
+        } catch (err: any) {
+            console.error('Error converting data:', err);
+            const errorMsg = err.response?.data?.error || 'Failed to convert data. Check the console for details.';
+            setError(errorMsg);
+            setEditableQuizData([]);
         } finally {
             setLoading(false);
         }
     };
 
-    // Function to handle changes in the editable quiz data table
-    const handleEditChange = (rowIndex: number, field: string, value: any) => { // Changed value type to any
+    const handleEditChange = (rowIndex: number, field: keyof QuizQuestion, value: any) => {
         const updatedData = [...editableQuizData];
-        if (field === 'options' && typeof value === 'object') { // Special handling for options object
-            updatedData[rowIndex] = {
-                ...updatedData[rowIndex],
-                [field]: value,
-            };
-        } else {
-            updatedData[rowIndex] = {
-                ...updatedData[rowIndex],
-                [field]: value,
-            };
+        const currentItem = { ...updatedData[rowIndex] };
+        (currentItem[field] as any) = value;
+
+        // If the options array is changed, we need to re-evaluate the answer
+        if (field === 'options') {
+            const newIndex = currentItem.options.indexOf(currentItem.answer);
+            currentItem.correctOptionIndex = newIndex !== -1 ? newIndex : undefined;
         }
+        // If the answer index is changed, update the answer text to match
+        if (field === 'correctOptionIndex') {
+            if (value !== undefined && currentItem.options[value]) {
+                currentItem.answer = currentItem.options[value];
+            }
+        }
+
+        updatedData[rowIndex] = currentItem;
         setEditableQuizData(updatedData);
     };
 
-    const downloadJSON = () => {
-        if (!convertedData || !convertedData.converted_data) return;
-        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-            JSON.stringify(convertedData.converted_data, null, 2)
-        )}`;
-        const link = document.createElement('a');
-        link.href = jsonString;
-        link.download = 'converted_data.json';
-        link.click();
-    };
-
-    const downloadCSV = () => {
-        if (!convertedData || !convertedData.converted_data || convertedData.converted_data.length === 0) return;
-        const items = convertedData.converted_data;
-        const replacer = (key: any, value: any) => value === null ? '' : value;
-        const header = Object.keys(items[0]);
-        const csv = [
-            header.join(','),
-            ...items.map((row: any) => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
-        ].join('\r\n');
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'converted_data.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    // New function to handle generating and downloading the quiz page
     const handleGenerateQuiz = async () => {
         if (editableQuizData.length === 0) {
-            alert('No quiz data to generate. Please convert data first.');
+            setError('No quiz data to generate. Please convert data first.');
+            return;
+        }
+
+        // Validate that all questions have a selected answer
+        const invalidQuestion = editableQuizData.find(q => q.correctOptionIndex === undefined || q.correctOptionIndex < 0 || q.correctOptionIndex >= 4);
+        if (invalidQuestion) {
+            setError(`错误：题目 "${invalidQuestion.question.substring(0, 30)}..." 没有正确选择答案。请在答案列中选择正确的选项。`);
             return;
         }
 
         setGeneratingQuiz(true);
-        console.log("Sending quiz data to backend:", editableQuizData); // Added for debugging
+        setError(null);
+        
+        const payload = {
+            quiz_data: editableQuizData,
+            mode: quizMode,
+        };
+
         try {
-            const response = await axios.post('http://localhost:8000/generate-practice-page', editableQuizData, {
-                responseType: 'blob', // Important: receive as blob for file download
+            const response = await axios.post('http://localhost:8000/generate-practice-page', payload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                responseType: 'blob',
             });
 
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/html' }));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'practice_quiz.html');
+            link.setAttribute('download', `quiz-${quizMode}-${Date.now()}.html`);
             document.body.appendChild(link);
             link.click();
             link.parentNode?.removeChild(link);
             window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error generating quiz page:', error);
-            alert('Failed to generate quiz page. Please check the console for more details.');
+        } catch (err: any) {
+            console.error('Error generating quiz page:', err);
+            const errorMsg = err.response?.data?.error || 'Failed to generate quiz page. Check console for details.';
+            setError(errorMsg);
         } finally {
             setGeneratingQuiz(false);
         }
     };
 
     return (
-        <div className="container mt-5">
-            <h1 className="mb-4 text-center">Intelligent Data Converter</h1>
-            <div className="row">
-                <div className="col-md-6">
-                    <div className="form-group">
-                        <label htmlFor="file-input">Upload Unstructured Data File</label>
+        <div className="container mt-4 mb-5">
+            <h1 className="mb-4 text-center">AI 题库转换与练习工具</h1>
+            
+            {/* --- Error Display --- */}
+            {error && (
+                <div className="alert alert-danger" role="alert">
+                    {error}
+                </div>
+            )}
+
+            {/* --- File Upload Section --- */}
+            <div className="card mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">第一步：上传题库文件</h5>
+                    <p className="card-text">支持 .txt, .docx, .xls, .xlsx 等格式。</p>
+                    <div className="input-group">
                         <input
                             id="file-input"
                             type="file"
                             className="form-control"
                             onChange={handleFileChange}
+                            accept=".txt,.doc,.docx,.xls,.xlsx,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         />
+                        <button
+                            className="btn btn-primary"
+                            onClick={handleConvert}
+                            disabled={loading || !file}
+                        >
+                            {loading ? (
+                                <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在转换...</>
+                            ) : '开始转换'}
+                        </button>
                     </div>
-                    
-                    <button
-                        className="btn btn-primary mt-3"
-                        onClick={handleConvert}
-                        disabled={loading || !file}
-                    >
-                        {loading ? 'Converting...' : 'Convert'}
-                    </button>
                 </div>
-                <div className="col-md-6">
-                    <h3>Converted Data (Micro-tune below)</h3>
-                    {convertedData && (
-                        <div>
-                            <div className="alert alert-secondary">
-                                <p><strong>Original File:</strong> {convertedData.original_filename}</p>
-                                <p><strong>Instructions:</strong> {convertedData.instructions}</p>
-                            </div>
-                            <div className="btn-group mb-3">
-                                <button className="btn btn-success" onClick={downloadJSON}>Download JSON</button>
-                                <button className="btn btn-info" onClick={downloadCSV}>Download CSV</button>
-                                <button
-                                    className="btn btn-warning"
-                                    onClick={handleGenerateQuiz}
-                                    disabled={generatingQuiz || editableQuizData.length === 0}
+            </div>
+
+            {/* --- Data Editing Section --- */}
+            {editableQuizData.length > 0 && (
+                <div className="card">
+                    <div className="card-body">
+                        <h5 className="card-title">第二步：检查并修正数据</h5>
+                        <p className="card-text">您可以在下表中微调 AI 提取的结果。请确保每个问题都已选择正确答案。</p>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <span className='text-muted'>原始文件: <strong>{originalFilename}</strong></span>
+                            <div className="d-flex align-items-center">
+                                <select 
+                                    className="form-select me-2" 
+                                    value={quizMode} 
+                                    onChange={(e) => setQuizMode(e.target.value as 'random' | 'sequential')}
+                                    style={{ width: 'auto' }}
                                 >
-                                    {generatingQuiz ? 'Generating...' : 'Generate Practice Page'}
+                                    <option value="random">随机模式</option>
+                                    <option value="sequential">顺序模式</option>
+                                </select>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={handleGenerateQuiz}
+                                    disabled={generatingQuiz}
+                                >
+                                    {generatingQuiz ? (
+                                        <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在生成...</>
+                                    ) : '生成刷题网页'}
                                 </button>
                             </div>
-                            <table className="table table-bordered">
-                                <thead>
+                        </div>
+                        
+                        <div className="table-responsive">
+                            <table className="table table-bordered table-hover" style={{ minWidth: '800px' }}>
+                                <thead className='table-light'>
                                     <tr>
-                                        {editableQuizData.length > 0 &&
-                                            Object.keys(editableQuizData[0]).map(key => (
-                                                <th key={key}>{key === 'options' ? 'Options' : key}</th>
-                                            ))
-                                        }
+                                        <th style={{ width: '35%' }}>Question</th>
+                                        <th style={{ width: '45%' }}>Options</th>
+                                        <th style={{ width: '20%' }}>Correct Answer</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {editableQuizData.map((item: any, rowIndex: number) => (
+                                    {editableQuizData.map((item, rowIndex) => (
                                         <tr key={rowIndex}>
-                                            {Object.keys(item).map((key: string, colIndex: number) => {
-                                                const indexToLetter = (index: number) => String.fromCharCode(65 + index);
-                                                return (
-                                                    <td key={colIndex}>
-                                                        {key === 'options' && Array.isArray(item[key]) ? (
-                                                            item[key].map((option: string, optionIndex: number) => (
-                                                                <div key={optionIndex}>
-                                                                    <strong>{indexToLetter(optionIndex)}:</strong>
-                                                                    <textarea
-                                                                        className="form-control form-control-sm"
-                                                                        value={option}
-                                                                        onChange={(e) => {
-                                                                            const updatedOptions = [...item[key]];
-                                                                            updatedOptions[optionIndex] = e.target.value;
-                                                                            handleEditChange(rowIndex, key, updatedOptions);
-                                                                        }}
-                                                                        rows={1}
-                                                                    />
-                                                                </div>
-                                                            ))
-                                                        ) : key === 'answer' ? (
-                                                            <input
-                                                                type="text"
-                                                                className="form-control form-control-sm"
-                                                                value={indexToLetter(item.options.indexOf(item.answer))}
-                                                                onChange={(e) => {
-                                                                    const newAnswerLetter = e.target.value.toUpperCase();
-                                                                    const newAnswerIndex = newAnswerLetter.charCodeAt(0) - 65;
-                                                                    if (newAnswerIndex >= 0 && newAnswerIndex < item.options.length) {
-                                                                        handleEditChange(rowIndex, key, item.options[newAnswerIndex]);
-                                                                    }
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <input
-                                                                type="text"
-                                                                className="form-control form-control-sm"
-                                                                value={String(item[key])}
-                                                                onChange={(e) => handleEditChange(rowIndex, key, e.target.value)}
-                                                            />
-                                                        )}
-                                                    </td>
-                                                );
-                                            })}
+                                            <td>
+                                                <textarea
+                                                    className="form-control form-control-sm"
+                                                    value={item.question}
+                                                    onChange={(e) => handleEditChange(rowIndex, 'question', e.target.value)}
+                                                    rows={4}
+                                                />
+                                            </td>
+                                            <td>
+                                                {item.options.map((option, optionIndex) => (
+                                                    <div key={optionIndex} className="input-group input-group-sm mb-1">
+                                                        <span className="input-group-text">{String.fromCharCode(65 + optionIndex)}</span>
+                                                        <textarea
+                                                            className="form-control"
+                                                            value={option}
+                                                            onChange={(e) => {
+                                                                const updatedOptions = [...item.options];
+                                                                updatedOptions[optionIndex] = e.target.value;
+                                                                handleEditChange(rowIndex, 'options', updatedOptions);
+                                                            }}
+                                                            rows={1}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </td>
+                                            <td>
+                                                <select
+                                                    className={`form-select form-select-sm ${item.correctOptionIndex === undefined ? 'is-invalid' : ''}`}
+                                                    value={item.correctOptionIndex ?? ''}
+                                                    onChange={(e) => handleEditChange(rowIndex, 'correctOptionIndex', e.target.value !== '' ? parseInt(e.target.value) : undefined)}
+                                                >
+                                                    <option value="" disabled>选择答案</option>
+                                                    {item.options.map((_, optionIndex) => (
+                                                        <option key={optionIndex} value={optionIndex}>
+                                                            {String.fromCharCode(65 + optionIndex)}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
