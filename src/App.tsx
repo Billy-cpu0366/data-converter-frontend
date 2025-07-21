@@ -102,7 +102,13 @@ function App() {
         };
 
         try {
-            const response = await axios.post('http://localhost:8000/generate-practice-page', payload, {
+            const BACKEND_URL = process.env.REACT_APP_BACKEND_URL; // 再次获取环境变量，或者你可以在函数外部定义一次
+        if (!BACKEND_URL) {
+            setError('Backend URL is not configured. Please check environment variables.');
+            setGeneratingQuiz(false); // 注意这里是 setGeneratingQuiz
+            return;
+        }
+        const response = await axios.post(`${BACKEND_URL}/generate-practice-page`, payload, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
