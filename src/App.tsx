@@ -1,261 +1,234 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import FileUpload from './components/FileUpload';
+import QuestionCard from './components/QuestionCard';
 
-// Define the structure of a single quiz question
 interface QuizQuestion {
-    question: string;
-    options: string[];
-    answer: string; // The text of the correct answer
-    correctOptionIndex?: number; // The index (0-3) of the correct option
+  question: string;
+  options: string[];
+  correctOptionIndex?: number;
 }
 
 function App() {
-    const [file, setFile] = useState<File | null>(null);
-    const [editableQuizData, setEditableQuizData] = useState<QuizQuestion[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [generatingQuiz, setGeneratingQuiz] = useState(false);
-    const [quizMode, setQuizMode] = useState<'random' | 'sequential'>('random');
-    const [error, setError] = useState<string | null>(null); // For displaying user-friendly errors
-    const [originalFilename, setOriginalFilename] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null);
+  const [editableQuizData, setEditableQuizData] = useState<QuizQuestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [generatingQuiz, setGeneratingQuiz] = useState(false);
+  const [quizMode, setQuizMode] = useState<'random' | 'sequential'>('random');
+  const [error, setError] = useState<string | null>(null);
+  const [originalFilename, setOriginalFilename] = useState<string>("");
 
-    
+  const handleConvert = async () => {
+    if (!file) {
+      setError('请先选择文件');
+      return;
+    }
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            setFile(event.target.files[0]);
-            setError(null); // Clear previous errors
-        }
-    };
+    setLoading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append('file', file);
 
-    const handleConvert = async () => {
-        if (!file) {
-            setError('Please select a file first.');
-            return;
-        }
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const response = await axios.post(`${API_BASE_URL}/convert`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      setEditableQuizData(response.data.converted_data || []);
+      setOriginalFilename(response.data.original_filename || "");
 
-        setLoading(true);
-        setError(null);
-        const formData = new FormData();
-        formData.append('file', file);
+    } catch (err: any) {
+      console.error('转换错误:', err);
+      const errorMsg = err.response?.data?.error || '转换失败，请检查文件格式';
+      setError(errorMsg);
+      setEditableQuizData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        try {
-            const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-            const response = await axios.post(`${API_BASE_URL}/convert`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            
-            setEditableQuizData(response.data.converted_data || []);
-            setOriginalFilename(response.data.original_filename || "");
+  const handleEditChange = (index: number, field: keyof QuizQuestion, value: any) => {
+    const updatedData = [...editableQuizData];
+    updatedData[index] = { ...updatedData[index], [field]: value };
+    setEditableQuizData(updatedData);
+  };
 
-        } catch (err: any) {
-            console.error('Error converting data:', err);
-            const errorMsg = err.response?.data?.error || 'Failed to convert data. Check the console for details.';
-            setError(errorMsg);
-            setEditableQuizData([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleRemoveQuestion = (index: number) => {
+    const updatedData = editableQuizData.filter((_, i) => i !== index);
+    setEditableQuizData(updatedData);
+  };
 
-    const handleEditChange = (rowIndex: number, field: keyof QuizQuestion, value: any) => {
-        const updatedData = [...editableQuizData];
-        const currentItem = { ...updatedData[rowIndex] };
-        (currentItem[field] as any) = value;
+  const handleGenerateQuiz = async () => {
+    if (editableQuizData.length === 0) {
+      setError('没有题目可以生成');
+      return;
+    }
 
-        // If the options array is changed, we need to re-evaluate the answer
-        if (field === 'options') {
-            const newIndex = currentItem.options.indexOf(currentItem.answer);
-            currentItem.correctOptionIndex = newIndex !== -1 ? newIndex : undefined;
-        }
-        // If the answer index is changed, update the answer text to match
-        if (field === 'correctOptionIndex') {
-            if (value !== undefined && currentItem.options[value]) {
-                currentItem.answer = currentItem.options[value];
-            }
-        }
-
-        updatedData[rowIndex] = currentItem;
-        setEditableQuizData(updatedData);
-    };
-
-    const handleGenerateQuiz = async () => {
-        if (editableQuizData.length === 0) {
-            setError('No quiz data to generate. Please convert data first.');
-            return;
-        }
-
-        // Validate that all questions have a selected answer
-        const invalidQuestion = editableQuizData.find(q => q.correctOptionIndex === undefined || q.correctOptionIndex < 0 || q.correctOptionIndex >= 4);
-        if (invalidQuestion) {
-            setError(`错误：题目 "${invalidQuestion.question.substring(0, 30)}..." 没有正确选择答案。请在答案列中选择正确的选项。`);
-            return;
-        }
-
-        setGeneratingQuiz(true);
-        setError(null);
-        
-        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        const payload = {
-            quiz_data: editableQuizData,
-            mode: quizMode,
-        };
-
-        try {
-            const response = await axios.post(`${API_BASE_URL}/generate-practice-page`, payload, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                responseType: 'blob',
-            });
-
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/html' }));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `quiz-${quizMode}-${Date.now()}.html`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (err: any) {
-            console.error('Error generating quiz page:', err);
-            const errorMsg = err.response?.data?.error || 'Failed to generate quiz page. Check console for details.';
-            setError(errorMsg);
-        } finally {
-            setGeneratingQuiz(false);
-        }
-    };
-
-    return (
-        <div className="container mt-4 mb-5">
-            <h1 className="mb-4 text-center">AI 题库转换与练习工具</h1>
-            
-            {/* --- Error Display --- */}
-            {error && (
-                <div className="alert alert-danger" role="alert">
-                    {error}
-                </div>
-            )}
-
-            {/* --- File Upload Section --- */}
-            <div className="card mb-4">
-                <div className="card-body">
-                    <h5 className="card-title">第一步：上传题库文件</h5>
-                    <p className="card-text">支持 .txt, .docx, .xls, .xlsx 等格式。</p>
-                    <div className="input-group">
-                        <input
-                            id="file-input"
-                            type="file"
-                            className="form-control"
-                            onChange={handleFileChange}
-                            accept=".txt,.doc,.docx,.xls,.xlsx,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        />
-                        <button
-                            className="btn btn-primary"
-                            onClick={handleConvert}
-                            disabled={loading || !file}
-                        >
-                            {loading ? (
-                                <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在转换...</>
-                            ) : '开始转换'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- Data Editing Section --- */}
-            {editableQuizData.length > 0 && (
-                <div className="card">
-                    <div className="card-body">
-                        <h5 className="card-title">第二步：检查并修正数据</h5>
-                        <p className="card-text">您可以在下表中微调 AI 提取的结果。请确保每个问题都已选择正确答案。</p>
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className='text-muted'>原始文件: <strong>{originalFilename}</strong></span>
-                            <div className="d-flex align-items-center">
-                                <select 
-                                    className="form-select me-2" 
-                                    value={quizMode} 
-                                    onChange={(e) => setQuizMode(e.target.value as 'random' | 'sequential')}
-                                    style={{ width: 'auto' }}
-                                >
-                                    <option value="random">随机模式</option>
-                                    <option value="sequential">顺序模式</option>
-                                </select>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={handleGenerateQuiz}
-                                    disabled={generatingQuiz}
-                                >
-                                    {generatingQuiz ? (
-                                        <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在生成...</>
-                                    ) : '生成刷题网页'}
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div className="table-responsive">
-                            <table className="table table-bordered table-hover" style={{ minWidth: '800px' }}>
-                                <thead className='table-light'>
-                                    <tr>
-                                        <th style={{ width: '35%' }}>Question</th>
-                                        <th style={{ width: '45%' }}>Options</th>
-                                        <th style={{ width: '20%' }}>Correct Answer</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {editableQuizData.map((item, rowIndex) => (
-                                        <tr key={rowIndex}>
-                                            <td>
-                                                <textarea
-                                                    className="form-control form-control-sm"
-                                                    value={item.question}
-                                                    onChange={(e) => handleEditChange(rowIndex, 'question', e.target.value)}
-                                                    rows={4}
-                                                />
-                                            </td>
-                                            <td>
-                                                {item.options.map((option, optionIndex) => (
-                                                    <div key={optionIndex} className="input-group input-group-sm mb-1">
-                                                        <span className="input-group-text">{String.fromCharCode(65 + optionIndex)}</span>
-                                                        <textarea
-                                                            className="form-control"
-                                                            value={option}
-                                                            onChange={(e) => {
-                                                                const updatedOptions = [...item.options];
-                                                                updatedOptions[optionIndex] = e.target.value;
-                                                                handleEditChange(rowIndex, 'options', updatedOptions);
-                                                            }}
-                                                            rows={1}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </td>
-                                            <td>
-                                                <select
-                                                    className={`form-select form-select-sm ${item.correctOptionIndex === undefined ? 'is-invalid' : ''}`}
-                                                    value={item.correctOptionIndex ?? ''}
-                                                    onChange={(e) => handleEditChange(rowIndex, 'correctOptionIndex', e.target.value !== '' ? parseInt(e.target.value) : undefined)}
-                                                >
-                                                    <option value="" disabled>选择答案</option>
-                                                    {item.options.map((_, optionIndex) => (
-                                                        <option key={optionIndex} value={optionIndex}>
-                                                            {String.fromCharCode(65 + optionIndex)}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+    const invalidQuestions = editableQuizData.filter(
+      q => q.correctOptionIndex === undefined
     );
+    
+    if (invalidQuestions.length > 0) {
+      setError(`有 ${invalidQuestions.length} 道题目未设置正确答案`);
+      return;
+    }
+
+    setGeneratingQuiz(true);
+    setError(null);
+    
+    const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    const payload = {
+      quiz_data: editableQuizData.map(q => ({
+        question: q.question,
+        options: q.options,
+        correctOptionIndex: q.correctOptionIndex
+      })),
+      mode: quizMode,
+    };
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/generate-practice-page`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/html' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `题库练习-${quizMode}-${Date.now()}.html`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (err: any) {
+      console.error('生成失败:', err);
+      const errorMsg = err.response?.data?.error || '生成失败，请重试';
+      setError(errorMsg);
+    } finally {
+      setGeneratingQuiz(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-stone-50 to-orange-50">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <header className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+            AI 智能题库转换
+          </h1>
+          <p className="text-xl text-gray-600">
+            一键转换你的题库文件为精美的在线练习
+          </p>
+        </header>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-8">
+          {/* 第一步：文件上传 */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-100 shadow-lg shadow-gray-200/50">
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                1
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">上传题库文件</h2>
+            </div>
+            
+            <FileUpload
+              onFileSelect={setFile}
+              selectedFile={file}
+              onRemoveFile={() => setFile(null)}
+            />
+
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={handleConvert}
+                disabled={!file || loading}
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold rounded-xl shadow-lg shadow-green-200/50 hover:shadow-xl transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>AI分析中...</span>
+                  </div>
+                ) : (
+                  <span>开始转换</span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* 第二步：编辑题目 */}
+          {editableQuizData.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-100 shadow-lg shadow-gray-200/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                    2
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">编辑题目</h2>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={quizMode}
+                    onChange={(e) => setQuizMode(e.target.value as 'random' | 'sequential')}
+                    className="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg focus:ring-2 focus:ring-green-400 shadow-sm"
+                  >
+                    <option value="random" className="text-gray-800">随机模式</option>
+                    <option value="sequential" className="text-gray-800">顺序模式</option>
+                  </select>
+                  <button
+                    onClick={handleGenerateQuiz}
+                    disabled={generatingQuiz}
+                    className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-200/50 hover:shadow-xl transform transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                  >
+                    {generatingQuiz ? '生成中...' : '生成练习'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-4 text-sm text-gray-600">
+                共 {editableQuizData.length} 道题目，原始文件：{originalFilename}
+              </div>
+
+              <div className="space-y-6">
+                {editableQuizData.map((question, index) => (
+                  <QuestionCard
+                    key={index}
+                    question={question}
+                    index={index}
+                    onUpdate={handleEditChange}
+                    onRemove={handleRemoveQuestion}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 空状态 */}
+          {editableQuizData.length === 0 && !loading && file && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <p className="text-gray-500">上传文件后开始转换题目...</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default App;
