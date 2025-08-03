@@ -43,12 +43,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
     }
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="w-full">
       {!selectedFile ? (
         <div
-          className={`bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer
-            ${isDragActive ? 'border-green-400 bg-green-50/50' : 'border-gray-300 hover:border-green-400'}`}
+          className={`apple-card border-2 border-dashed transition-all duration-300 cursor-pointer
+            ${isDragActive 
+              ? 'border-apple-blue bg-apple-blue/5 dark:border-apple-blue dark:bg-apple-blue/10' 
+              : 'border-apple-separator dark:border-apple-dark-separator hover:border-apple-blue dark:hover:border-apple-blue'
+            }`}
           onDragEnter={handleDragIn}
           onDragLeave={handleDragOut}
           onDragOver={handleDrag}
@@ -62,47 +73,51 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
             accept=".txt,.doc,.docx,.xls,.xlsx"
           />
           <div className="flex flex-col items-center justify-center p-12 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 5.25 5.25 0 019.841 4.67 4.5 4.5 0 01-1.241 8.976" />
-              </svg>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors duration-300
+              ${isDragActive 
+                ? 'bg-apple-blue/10 dark:bg-apple-blue/20' 
+                : 'bg-apple-blue/5 dark:bg-apple-blue/10'
+              }`}
+            >
+              <i className="fas fa-cloud-upload-alt text-apple-blue text-2xl"></i>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2"
+            <h3 className="text-lg font-semibold text-apple-text dark:text-apple-dark-text mb-2"
             >
               拖拽文件到此处或点击上传
             </h3>
-            <p className="text-gray-600"
+            <p className="text-apple-text-secondary dark:text-apple-dark-text-secondary"
             >
               支持 .txt, .docx, .xlsx 等格式
             </p>
+            <button
+              onClick={() => document.getElementById('file-upload')?.click()}
+              className="mt-4 apple-button px-4 py-2 bg-apple-blue text-white text-sm font-medium rounded-apple hover:bg-apple-blue/90 transition-colors"
+            >
+              选择文件
+            </button>
           </div>
         </div>
       ) : (
-        <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30"
-        >
+        <div className="apple-card p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
+              <div className="w-12 h-12 bg-apple-green/10 dark:bg-apple-green/20 rounded-xl flex items-center justify-center">
+                <i className="fas fa-file-alt text-apple-green text-lg"></i>
               </div>
               <div>
-                <p className="font-semibold text-white"
+                <p className="font-semibold text-apple-text dark:text-apple-dark-text"
                 >{selectedFile.name}</p>
-                <p className="text-sm text-white/70"
+                <p className="text-sm text-apple-text-secondary dark:text-apple-dark-text-secondary"
                 >
-                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  {formatFileSize(selectedFile.size)}
                 </p>
               </div>
             </div>
             <button
               onClick={onRemoveFile}
-              className="p-2 text-white/70 hover:text-red-400 transition-colors duration-200 rounded-full hover:bg-red-500/20"
+              className="apple-button p-2 text-apple-text-secondary hover:text-apple-red rounded-lg hover:bg-apple-red/10 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <i className="fas fa-times"></i>
             </button>
           </div>
         </div>
