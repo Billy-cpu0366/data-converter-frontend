@@ -1,0 +1,747 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --apple-blue: #007AFF;
+  --apple-green: #34C759;
+  --apple-red: #FF3B30;
+  --apple-orange: #FF9500;
+  --apple-yellow: #FFCC00;
+  --apple-teal: #5AC8FA;
+  --apple-purple: #AF52DE;
+  --apple-pink: #FF2D92;
+  --apple-gray: #8E8E93;
+  --apple-gray2: #AEAEB2;
+  --apple-gray3: #C7C7CC;
+  --apple-gray4: #D1D1D6;
+  --apple-gray5: #E5E5EA;
+  --apple-gray6: #F2F2F7;
+  --apple-bg: #FFFFFF;
+  --apple-secondary-bg: #F2F2F7;
+  --apple-tertiary-bg: #FFFFFF;
+  --apple-grouped-bg: #F2F2F7;
+  --apple-grouped-secondary-bg: #FFFFFF;
+  --apple-text: #1d1d1f;
+  --apple-text-secondary: #6e6e73;
+  --apple-separator: rgba(60, 60, 67, 0.29);
+  --apple-overlay: rgba(0, 0, 0, 0.4);
+}
+
+.dark {
+  --apple-blue: #0A84FF;
+  --apple-green: #30D158;
+  --apple-red: #FF453A;
+  --apple-orange: #FF9F0A;
+  --apple-yellow: #FFD60A;
+  --apple-teal: #64D2FF;
+  --apple-purple: #BF5AF2;
+  --apple-pink: #FF375F;
+  --apple-gray: #8E8E93;
+  --apple-gray2: #636366;
+  --apple-gray3: #48484A;
+  --apple-gray4: #3A3A3C;
+  --apple-gray5: #2C2C2E;
+  --apple-gray6: #1C1C1E;
+  --apple-bg: #000000;
+  --apple-secondary-bg: #1C1C1E;
+  --apple-tertiary-bg: #2C2C2E;
+  --apple-grouped-bg: #1C1C1E;
+  --apple-grouped-secondary-bg: #2C2C2E;
+  --apple-text: #FFFFFF;
+  --apple-text-secondary: #8E8E93;
+  --apple-separator: rgba(84, 84, 88, 0.65);
+  --apple-overlay: rgba(0, 0, 0, 0.7);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--apple-bg);
+    color: var(--apple-text);
+    line-height: 1.47059;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--apple-gray6);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--apple-gray4);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--apple-gray3);
+  }
+}
+
+@layer components {
+  .apple-card {
+    @apply bg-apple-bg dark:bg-apple-dark-bg border border-apple-separator dark:border-apple-dark-separator rounded-apple shadow-apple;
+  }
+
+  .apple-button {
+    @apply transition-all duration-200 ease-out transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:ring-opacity-50;
+  }
+
+  .apple-glass {
+    @apply backdrop-blur-apple bg-apple-bg/80 dark:bg-apple-dark-bg/80;
+  }
+
+  .apple-text-gradient {
+    @apply bg-gradient-to-r from-apple-blue to-apple-purple bg-clip-text text-transparent;
+  }
+
+  .apple-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .apple-badge-success {
+    @apply apple-badge bg-apple-green/10 text-apple-green dark:bg-apple-green/20;
+  }
+
+  .apple-badge-error {
+    @apply apple-badge bg-apple-red/10 text-apple-red dark:bg-apple-red/20;
+  }
+
+  .apple-badge-warning {
+    @apply apple-badge bg-apple-orange/10 text-apple-orange dark:bg-apple-orange/20;
+  }
+
+  .apple-badge-info {
+    @apply apple-badge bg-apple-blue/10 text-apple-blue dark:bg-apple-blue/20;
+  }
+
+  /* 动态粒子背景 */
+  .particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--apple-blue), var(--apple-purple));
+    opacity: 0.1;
+    animation: float 20s infinite linear;
+  }
+
+  .particle:nth-child(odd) {
+    background: linear-gradient(45deg, var(--apple-teal), var(--apple-green));
+    animation-duration: 25s;
+  }
+
+  .particle:nth-child(3n) {
+    background: linear-gradient(45deg, var(--apple-pink), var(--apple-orange));
+    animation-duration: 30s;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.1;
+    }
+    90% {
+      opacity: 0.1;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  /* 3D卡片效果 */
+  .card-3d {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+
+  .card-3d:hover {
+    transform: rotateY(5deg) rotateX(5deg) translateZ(20px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-3d::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .card-3d:hover::before {
+    opacity: 1;
+  }
+
+  /* 悬浮动效 */
+  .hover-float {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-float:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  /* 渐变动画 */
+  .gradient-animation {
+    background: linear-gradient(-45deg, var(--apple-blue), var(--apple-purple), var(--apple-teal), var(--apple-pink));
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* 打字机效果 */
+  .typewriter {
+    overflow: hidden;
+    border-right: 2px solid var(--apple-blue);
+    white-space: nowrap;
+    animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  @keyframes blink-caret {
+    from, to {
+      border-color: transparent;
+    }
+    50% {
+      border-color: var(--apple-blue);
+    }
+  }
+
+  /* 炫酷加载动画 */
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid transparent;
+    border-top: 3px solid var(--apple-blue);
+    border-right: 3px solid var(--apple-purple);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: relative;
+  }
+
+  .loading-spinner::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--apple-teal);
+    border-left: 2px solid var(--apple-green);
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite reverse;
+  }
+
+  .loading-spinner::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border: 1px solid transparent;
+    border-top: 1px solid var(--apple-pink);
+    border-bottom: 1px solid var(--apple-orange);
+    border-radius: 50%;
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Animation utilities */
+  .animate-apple-fade-in {
+    animation: apple-fade-in 0.3s ease-out;
+  }
+
+  .animate-apple-slide-up {
+    animation: apple-slide-up 0.4s ease-out;
+  }
+
+  .animate-apple-scale {
+    animation: apple-scale 0.2s ease-out;
+  }
+
+  @keyframes apple-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes apple-slide-up {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes apple-scale {
+    from {
+      transform: scale(0.95);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  /* Responsive utilities */
+  @media (max-width: 768px) {
+    .apple-card {
+      @apply rounded-apple-sm;
+    }
+  }
+
+  /* Focus styles */
+  .focus-apple {
+    @apply focus:outline-none focus:ring-2 focus:ring-apple-blue focus:ring-opacity-50;
+  }
+
+  /* Hover effects */
+  .hover-apple {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .hover-apple:hover {
+    @apply transform -translate-y-0.5;
+  }
+
+  /* Loading states */
+  .skeleton {
+    @apply bg-apple-gray6 dark:bg-apple-dark-gray6 animate-pulse;
+  }
+
+  /* Form styles */
+  .apple-input {
+    @apply bg-apple-bg dark:bg-apple-dark-secondary-bg border border-apple-separator dark:border-apple-dark-separator rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent;
+  }
+
+  .apple-textarea {
+    @apply apple-input resize-none;
+  }
+
+  .apple-select {
+    @apply apple-input;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+
+  /* 霓虹灯效果 */
+  .neon-glow {
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 15px currentColor,
+      0 0 20px var(--apple-blue),
+      0 0 35px var(--apple-blue),
+      0 0 40px var(--apple-blue);
+    animation: neon-flicker 2s infinite alternate;
+  }
+
+  @keyframes neon-flicker {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* 脉冲边框效果 */
+  .pulse-border {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pulse-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.4), transparent);
+    animation: pulse-border-animation 2s infinite;
+  }
+
+  @keyframes pulse-border-animation {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* 磁性悬浮效果 */
+  .magnetic-hover {
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+
+  .magnetic-hover:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  /* 呼吸灯效果 */
+  .breathing-light {
+    animation: breathing 3s ease-in-out infinite;
+  }
+
+  @keyframes breathing {
+    0%, 100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  /* 彩虹边框 */
+  .rainbow-border {
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 400% 400%;
+    animation: rainbow-border-animation 3s ease infinite;
+    padding: 2px;
+    border-radius: inherit;
+  }
+
+  @keyframes rainbow-border-animation {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* 星空闪烁效果 */
+  .starfield {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .starfield::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    animation: starfield-animation 20s linear infinite;
+    opacity: 0.3;
+  }
+
+  @keyframes starfield-animation {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-200px);
+    }
+  }
+
+  /* 赛博朋克发光效果 */
+  .cyber-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cyber-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
+    animation: cyber-scan 3s infinite;
+  }
+
+  @keyframes cyber-scan {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* 全息投影效果 */
+  .hologram {
+    position: relative;
+    background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 255, 0.1) 50%, transparent 70%);
+    background-size: 20px 20px;
+    animation: hologram-flicker 2s infinite;
+  }
+
+  .hologram::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 255, 0.1) 2px,
+      rgba(0, 255, 255, 0.1) 4px
+    );
+    animation: hologram-lines 0.1s infinite;
+  }
+
+  @keyframes hologram-flicker {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes hologram-lines {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(4px);
+    }
+  }
+
+  /* 能量脉冲效果 */
+  .energy-pulse {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .energy-pulse::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: energy-pulse-animation 2s infinite;
+  }
+
+  @keyframes energy-pulse-animation {
+    0% {
+      width: 0;
+      height: 0;
+      opacity: 1;
+    }
+    100% {
+      width: 300px;
+      height: 300px;
+      opacity: 0;
+    }
+  }
+
+  /* 数据流效果 */
+  .data-stream {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .data-stream::before {
+    content: '01001001 01101110 01110100 01100101 01101100 01101100 01101001 01100111 01100101 01101110 01110100';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    color: rgba(0, 255, 255, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 20px;
+    white-space: nowrap;
+    animation: data-stream-flow 10s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes data-stream-flow {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  /* 量子效果 */
+  .quantum-effect {
+    position: relative;
+    background: radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+    animation: quantum-fluctuation 3s ease-in-out infinite;
+  }
+
+  @keyframes quantum-fluctuation {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+      filter: hue-rotate(0deg);
+    }
+    33% {
+      transform: scale(1.05) rotate(1deg);
+      filter: hue-rotate(120deg);
+    }
+    66% {
+      transform: scale(0.95) rotate(-1deg);
+      filter: hue-rotate(240deg);
+    }
+  }
+
+  /* 矩阵雨效果 */
+  .matrix-rain {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .matrix-rain::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    background-image:
+      linear-gradient(transparent 70%, rgba(0, 255, 0, 0.6) 70%, rgba(0, 255, 0, 0.6) 85%, transparent 85%),
+      linear-gradient(transparent 75%, rgba(0, 255, 0, 0.4) 75%, rgba(0, 255, 0, 0.4) 90%, transparent 90%),
+      linear-gradient(transparent 80%, rgba(0, 255, 0, 0.2) 80%, rgba(0, 255, 0, 0.2) 95%, transparent 95%);
+    background-size: 20px 50px, 30px 60px, 40px 70px;
+    animation: matrix-rain-fall 3s linear infinite;
+  }
+
+  @keyframes matrix-rain-fall {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  /* 波浪弹跳动画 */
+  @keyframes wave-bounce {
+    0%, 100% {
+      transform: scaleY(0.3);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
+  .wave-bounce {
+    animation: wave-bounce 1.5s ease-in-out infinite;
+  }
+
+  /* 扫描动画 */
+  @keyframes scan {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# Cloudflare Pages重定向规则
+# SPA路由支持
+/*    /index.html   200
