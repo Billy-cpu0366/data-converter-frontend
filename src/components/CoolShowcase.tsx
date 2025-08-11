@@ -7,7 +7,6 @@ import GradientAnimation from './GradientAnimation';
 import FileUpload from './FileUpload';
 import LoadingScreen from './LoadingScreen';
 import TextEditor from './TextEditor';
-import { generateSampleText } from '../utils/fileParser';
 import { API_ENDPOINTS } from '../config/api';
 
 const CoolShowcase: React.FC = () => {
