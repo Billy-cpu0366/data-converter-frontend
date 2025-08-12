@@ -8,16 +8,8 @@ import FileUpload from './FileUpload';
 import LoadingScreen from './LoadingScreen';
 import TextEditor from './TextEditor';
 import { API_ENDPOINTS } from '../config/api';
-import { useMobile, getMobileClasses, getMobileAnimations } from '../hooks/useMobile';
 
 const CoolShowcase: React.FC = () => {
-  // 移动端检测
-  const mobileDetection = useMobile();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const mobileClasses = getMobileClasses(mobileDetection);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const mobileAnimations = getMobileAnimations(mobileDetection);
-
   const [darkMode, setDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
