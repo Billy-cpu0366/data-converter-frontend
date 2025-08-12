@@ -13,7 +13,9 @@ import { useMobile, getMobileClasses, getMobileAnimations } from '../hooks/useMo
 const CoolShowcase: React.FC = () => {
   // 移动端检测
   const mobileDetection = useMobile();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const mobileClasses = getMobileClasses(mobileDetection);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const mobileAnimations = getMobileAnimations(mobileDetection);
 
   const [darkMode, setDarkMode] = useState(false);
