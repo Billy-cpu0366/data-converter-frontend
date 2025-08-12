@@ -62,12 +62,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
   };
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
       {/* 主上传区域 */}
       <div className="lg:col-span-2">
         {!selectedFile ? (
           <div
-            className={`relative border-2 border-dashed transition-all duration-500 cursor-pointer group overflow-hidden rounded-2xl min-h-[320px] flex items-center justify-center
+            className={`relative border-2 border-dashed transition-all duration-500 cursor-pointer group overflow-hidden rounded-xl sm:rounded-2xl min-h-[280px] sm:min-h-[320px] flex items-center justify-center
               ${isDragActive
                 ? 'border-cyan-400 bg-cyan-400/5 scale-[1.02] shadow-2xl shadow-cyan-400/20'
                 : 'border-gray-300/30 dark:border-gray-600/30 hover:border-cyan-400/50 dark:hover:border-cyan-400/50 hover:scale-[1.01] hover:shadow-xl hover:shadow-cyan-400/10'
@@ -94,7 +94,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
             </div>
 
             {/* 主要内容区域 */}
-            <div className="relative z-20 w-full h-full flex flex-col items-center justify-center p-8">
+            <div className="relative z-20 w-full h-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
               {/* 现代化图标设计 */}
               <div className={`relative w-24 h-24 mb-6 transition-all duration-700 transform
                 ${isDragActive
@@ -163,12 +163,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
               </div>
 
               {/* 主标题 */}
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-3 text-center">
                 {isDragActive ? '释放文件开始上传' : '拖拽文件或点击上传'}
               </h2>
 
               {/* 副标题 */}
-              <p className="text-gray-500 dark:text-gray-400 mb-8 text-lg">
+              <p className="text-gray-500 dark:text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg text-center">
                 支持多种格式，快速转换处理
               </p>
               {/* 行动按钮 */}
@@ -191,7 +191,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
                   zIndex: 9999,
                   pointerEvents: 'auto'
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-cyan-400/30 active:scale-95 relative overflow-hidden group"
+                className="px-6 py-4 sm:px-8 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold text-base sm:text-lg rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-cyan-400/30 active:scale-95 relative overflow-hidden group min-h-[48px] flex items-center justify-center"
               >
                 {/* 按钮光效 */}
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 -translate-x-full group-hover:translate-x-full"></div>
@@ -229,8 +229,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, selectedFile, onR
 
       {/* 侧边栏信息 */}
       <div className="lg:col-span-1">
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 sticky top-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 lg:sticky lg:top-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
             <i className="fas fa-info-circle text-cyan-400"></i>
             支持格式
           </h3>

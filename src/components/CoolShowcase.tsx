@@ -8,8 +8,13 @@ import FileUpload from './FileUpload';
 import LoadingScreen from './LoadingScreen';
 import TextEditor from './TextEditor';
 import { API_ENDPOINTS } from '../config/api';
+import { useMobile, getMobileClasses, getMobileAnimations } from '../hooks/useMobile';
 
 const CoolShowcase: React.FC = () => {
+  // 移动端检测
+  const mobileDetection = useMobile();
+  const mobileClasses = getMobileClasses(mobileDetection);
+  const mobileAnimations = getMobileAnimations(mobileDetection);
 
   const [darkMode, setDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -359,7 +364,7 @@ ${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setActiveSection(activeSection === 'upload' ? 'demo' : 'upload')}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/25"
+                  className="px-4 py-3 sm:px-6 sm:py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm sm:text-base rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/25 min-h-[44px] flex items-center justify-center"
                 >
                   {activeSection === 'upload' ? '🎮 查看演示' : '📁 文件上传'}
                 </button>
@@ -375,23 +380,23 @@ ${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt
         </nav>
 
         {/* 主内容区域 */}
-        <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
+        <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-24 sm:pt-20">
           <div className="max-w-7xl mx-auto w-full">
 
             {activeSection === 'upload' ? (
               /* 文件上传区域 */
               <div className="text-center">
                 <div className="mb-12">
-                  <h1 className="text-6xl md:text-7xl font-black mb-6 leading-none">
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-none">
                     <span className="block bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                       数据转换
                     </span>
-                    <span className="block text-white text-5xl md:text-6xl mt-4">
+                    <span className="block text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-4">
                       新纪元
                     </span>
                   </h1>
 
-                  <div className="text-xl md:text-2xl text-cyan-300 mb-8 h-8 font-light">
+                  <div className="text-lg sm:text-xl md:text-2xl text-cyan-300 mb-8 h-8 font-light">
                     <TypewriterText
                       texts={[
                         '🚀 拖拽文件，AI智能提取题目',
@@ -408,7 +413,7 @@ ${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt
 
                 {/* 文件上传组件 */}
                 <div className="max-w-4xl mx-auto">
-                  <div className="group relative p-8 bg-gradient-to-br from-black/40 to-gray-900/60 backdrop-blur-xl rounded-3xl border border-cyan-400/20 overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20 hover:border-cyan-400/40">
+                  <div className="group relative p-4 sm:p-6 md:p-8 bg-gradient-to-br from-black/40 to-gray-900/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-cyan-400/20 overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20 hover:border-cyan-400/40">
                     {/* 动态光效背景 */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/5 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
 
@@ -420,27 +425,27 @@ ${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt
                     {/* 内容区域 */}
                     <div className="relative z-10">
                       {/* 步骤指示器 */}
-                      <div className="flex items-center justify-center mb-8">
-                        <div className="flex items-center space-x-4">
-                          <div className={`flex items-center space-x-2 ${currentStep === 'upload' ? 'text-cyan-400' : currentStep === 'edit' || currentStep === 'result' ? 'text-green-400' : 'text-gray-500'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'upload' ? 'border-cyan-400 bg-cyan-400/20' : currentStep === 'edit' || currentStep === 'result' ? 'border-green-400 bg-green-400/20' : 'border-gray-500'}`}>
-                              <i className="fas fa-upload text-sm"></i>
+                      <div className="flex items-center justify-center mb-6 sm:mb-8">
+                        <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto pb-2">
+                          <div className={`flex items-center space-x-1 sm:space-x-2 ${currentStep === 'upload' ? 'text-cyan-400' : currentStep === 'edit' || currentStep === 'result' ? 'text-green-400' : 'text-gray-500'}`}>
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${currentStep === 'upload' ? 'border-cyan-400 bg-cyan-400/20' : currentStep === 'edit' || currentStep === 'result' ? 'border-green-400 bg-green-400/20' : 'border-gray-500'}`}>
+                              <i className="fas fa-upload text-xs sm:text-sm"></i>
                             </div>
-                            <span className="text-sm font-medium">上传文件</span>
+                            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">上传文件</span>
                           </div>
-                          <div className={`w-8 h-0.5 ${currentStep === 'edit' || currentStep === 'result' ? 'bg-green-400' : 'bg-gray-600'}`}></div>
-                          <div className={`flex items-center space-x-2 ${currentStep === 'edit' ? 'text-cyan-400' : currentStep === 'result' ? 'text-green-400' : 'text-gray-500'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'edit' ? 'border-cyan-400 bg-cyan-400/20' : currentStep === 'result' ? 'border-green-400 bg-green-400/20' : 'border-gray-500'}`}>
-                              <i className="fas fa-edit text-sm"></i>
+                          <div className={`w-4 sm:w-8 h-0.5 ${currentStep === 'edit' || currentStep === 'result' ? 'bg-green-400' : 'bg-gray-600'}`}></div>
+                          <div className={`flex items-center space-x-1 sm:space-x-2 ${currentStep === 'edit' ? 'text-cyan-400' : currentStep === 'result' ? 'text-green-400' : 'text-gray-500'}`}>
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${currentStep === 'edit' ? 'border-cyan-400 bg-cyan-400/20' : currentStep === 'result' ? 'border-green-400 bg-green-400/20' : 'border-gray-500'}`}>
+                              <i className="fas fa-edit text-xs sm:text-sm"></i>
                             </div>
-                            <span className="text-sm font-medium">编辑文本</span>
+                            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">编辑文本</span>
                           </div>
-                          <div className={`w-8 h-0.5 ${currentStep === 'result' ? 'bg-green-400' : 'bg-gray-600'}`}></div>
-                          <div className={`flex items-center space-x-2 ${currentStep === 'result' ? 'text-cyan-400' : 'text-gray-500'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'result' ? 'border-cyan-400 bg-cyan-400/20' : 'border-gray-500'}`}>
-                              <i className="fas fa-magic text-sm"></i>
+                          <div className={`w-4 sm:w-8 h-0.5 ${currentStep === 'result' ? 'bg-green-400' : 'bg-gray-600'}`}></div>
+                          <div className={`flex items-center space-x-1 sm:space-x-2 ${currentStep === 'result' ? 'text-cyan-400' : 'text-gray-500'}`}>
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${currentStep === 'result' ? 'border-cyan-400 bg-cyan-400/20' : 'border-gray-500'}`}>
+                              <i className="fas fa-magic text-xs sm:text-sm"></i>
                             </div>
-                            <span className="text-sm font-medium">生成网页</span>
+                            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">生成网页</span>
                           </div>
                         </div>
                       </div>
