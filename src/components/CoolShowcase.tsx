@@ -77,14 +77,22 @@ const CoolShowcase: React.FC = () => {
           // 为了显示，生成格式化文本（但不用于生成HTML）
           const formattedText = convertedData.map((q: any, index: number) => {
             const question = q.raw_question || q.question;
-            const options = q.raw_options || q.options;
+            const rawOptions = q.raw_options || q.options;
             const answer = q.raw_answer || '';
+
+            // 🔧 修复选项格式：清理选项中可能包含的字母前缀
+            const cleanOptions = rawOptions.map((opt: string) => {
+              if (typeof opt !== 'string') return String(opt);
+              // 移除开头的 A. B. C. D. 或 A B C D 格式
+              // eslint-disable-next-line no-useless-escape
+              return opt.replace(/^[A-D][\.\s]*/, '').trim();
+            });
 
             return `题目 ${index + 1}:
 ${question}
 
 选项:
-${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}
+${cleanOptions.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}
 
 答案: ${answer}
 ---`;
@@ -218,7 +226,23 @@ ${options.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. ${opt
       // 🔧 修复：优先使用原始数据，如果没有则解析文本
       if (convertedQuizData && convertedQuizData.length > 0) {
         console.log('使用原始转换数据:', convertedQuizData.length, '道题目');
-        quizData = convertedQuizData;
+        // 🔧 清理原始数据中的选项格式
+        quizData = convertedQuizData.map((q: any) => {
+          const rawOptions = q.raw_options || q.options || [];
+          const cleanOptions = rawOptions.map((opt: string) => {
+            if (typeof opt !== 'string') return String(opt);
+            // 移除开头的 A. B. C. D. 或 A B C D 格式
+            // eslint-disable-next-line no-useless-escape
+            return opt.replace(/^[A-D][\.\s]*/, '').trim();
+          });
+
+          return {
+            ...q,
+            question: q.raw_question || q.question,
+            options: cleanOptions,
+            correctOptionIndex: q.correctOptionIndex || 0
+          };
+        });
       } else if (editedText.trim()) {
         console.log('解析编辑后的文本');
         quizData = parseTextToQuizData(editedText);
