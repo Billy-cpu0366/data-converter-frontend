@@ -174,36 +174,67 @@ ${cleanOptions.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. 
     }).join('\n');
   };
 
-  // 将文本解析回题目数据格式
+  // 将文本解析回题目数据格式 - 支持多种格式
   const parseTextToQuizData = (text: string): any[] => {
     const questions = [];
-    const questionBlocks = text.split(/\n\s*\n/).filter(block => block.trim());
+
+    // 🔧 支持两种格式：
+    // 格式1: "题目 1:" 开头的格式（编辑器显示格式）
+    // 格式2: "1." 开头的格式（原始格式）
+
+    // 先尝试按 "题目 X:" 分割
+    let questionBlocks = text.split(/题目\s*\d+\s*:/).filter(block => block.trim());
+    let isNewFormat = questionBlocks.length > 1;
+
+    // 如果没有找到新格式，尝试原始格式
+    if (!isNewFormat) {
+      questionBlocks = text.split(/\n\s*\n/).filter(block => block.trim());
+    }
 
     for (const block of questionBlocks) {
       const lines = block.split('\n').map(line => line.trim()).filter(line => line);
       if (lines.length < 3) continue;
 
-      // 提取题目
-      const questionLine = lines[0];
-      const question = questionLine.replace(/^\d+\.\s*/, '');
-
-      // 提取选项
+      let question = '';
       const options = [];
-      let answerLine = '';
+      let correctOptionIndex = 0;
 
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (line.match(/^[A-D]\.\s/)) {
-          options.push(line.substring(3));
-        } else if (line.includes('【答案】')) {
-          answerLine = line;
-          break;
+      if (isNewFormat) {
+        // 新格式解析
+        let currentSection = '';
+
+        for (const line of lines) {
+          if (line === '选项:' || line === '选项：') {
+            currentSection = 'options';
+            continue;
+          } else if (line.startsWith('答案:') || line.startsWith('答案：')) {
+            const answerMatch = line.match(/答案[:：]\s*([A-D])/);
+            if (answerMatch) {
+              correctOptionIndex = answerMatch[1].charCodeAt(0) - 65;
+            }
+            break;
+          } else if (currentSection === 'options' && line.match(/^[A-D]\.\s/)) {
+            options.push(line.substring(3).trim());
+          } else if (!currentSection && line.trim()) {
+            question = line.trim();
+          }
+        }
+      } else {
+        // 原始格式解析
+        const questionLine = lines[0];
+        question = questionLine.replace(/^\d+\.\s*/, '');
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.match(/^[A-D]\.\s/)) {
+            options.push(line.substring(3));
+          } else if (line.includes('【答案】')) {
+            const answerMatch = line.match(/【答案】([A-D])/);
+            correctOptionIndex = answerMatch ? answerMatch[1].charCodeAt(0) - 65 : 0;
+            break;
+          }
         }
       }
-
-      // 提取答案
-      const answerMatch = answerLine.match(/【答案】([A-D])/);
-      const correctOptionIndex = answerMatch ? answerMatch[1].charCodeAt(0) - 65 : 0;
 
       if (question && options.length > 0) {
         questions.push({
@@ -223,8 +254,11 @@ ${cleanOptions.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. 
     try {
       let quizData;
 
-      // 🔧 修复：优先使用原始数据，如果没有则解析文本
-      if (convertedQuizData && convertedQuizData.length > 0) {
+      // 🔧 修复：优先使用用户编辑的文本，确保用户的修改能生效
+      if (editedText.trim()) {
+        console.log('使用用户编辑的文本生成题目');
+        quizData = parseTextToQuizData(editedText);
+      } else if (convertedQuizData && convertedQuizData.length > 0) {
         console.log('使用原始转换数据:', convertedQuizData.length, '道题目');
         // 🔧 清理原始数据中的选项格式
         quizData = convertedQuizData.map((q: any) => {
@@ -243,9 +277,6 @@ ${cleanOptions.map((opt: string, i: number) => `${String.fromCharCode(65 + i)}. 
             correctOptionIndex: q.correctOptionIndex || 0
           };
         });
-      } else if (editedText.trim()) {
-        console.log('解析编辑后的文本');
-        quizData = parseTextToQuizData(editedText);
       } else {
         alert('没有题目数据可以生成');
         return;
